@@ -10,7 +10,7 @@ import UIKit
 
 class ViewController: UIViewController {
     
-    lazy var document: UIImageView = {
+    lazy var documentImage: UIImageView = {
         let iv = UIImageView(image: UIImage(named: UIImage.imageName.document)!)
         iv.translatesAutoresizingMaskIntoConstraints = false
         iv.contentMode = .scaleAspectFit
@@ -20,7 +20,7 @@ class ViewController: UIViewController {
     
     var documentOrigin : CGPoint? = nil
     
-    lazy var trashCan: UIImageView = {
+    lazy var trashImage: UIImageView = {
         let iv = UIImageView(image: UIImage(named: UIImage.imageName.trashCan)!)
         iv.translatesAutoresizingMaskIntoConstraints = false
         iv.contentMode = .scaleAspectFit
@@ -36,27 +36,27 @@ class ViewController: UIViewController {
 
     override func viewWillAppear(_ animated: Bool) {
 
-        document.removeFromSuperview()
-        trashCan.removeFromSuperview()
+        documentImage.removeFromSuperview()
+        trashImage.removeFromSuperview()
         
         //setup views in order: back to front
-        view.addSubview(trashCan)
+        view.addSubview(trashImage)
         NSLayoutConstraint.activate([
-            trashCan.heightAnchor.constraint(equalToConstant: 60),
-            trashCan.widthAnchor.constraint(equalToConstant: 60),
-            trashCan.bottomAnchor.constraint(equalTo: view.bottomAnchor, constant: -40),
-            trashCan.rightAnchor.constraint(equalTo: view.rightAnchor, constant:-20)
+            trashImage.heightAnchor.constraint(equalToConstant: 60),
+            trashImage.widthAnchor.constraint(equalToConstant: 60),
+            trashImage.bottomAnchor.constraint(equalTo: view.bottomAnchor, constant: -40),
+            trashImage.rightAnchor.constraint(equalTo: view.rightAnchor, constant:-20)
             ])
         
-        view.addSubview(document)
+        view.addSubview(documentImage)
         NSLayoutConstraint.activate([
-            document.heightAnchor.constraint(equalToConstant: 60),
-            document.widthAnchor.constraint(equalToConstant: 60),
-            document.topAnchor.constraint(equalTo: view.topAnchor, constant: 40),
-            document.leftAnchor.constraint(equalTo: view.leftAnchor, constant: 20)
+            documentImage.heightAnchor.constraint(equalToConstant: 60),
+            documentImage.widthAnchor.constraint(equalToConstant: 60),
+            documentImage.topAnchor.constraint(equalTo: view.topAnchor, constant: 40),
+            documentImage.leftAnchor.constraint(equalTo: view.leftAnchor, constant: 20)
             ])
         
-        addPanGestureRecognizer(to: document, action: #selector(handleDocumentPan(sender:)))
+        addPanGestureRecognizer(to: documentImage, action: #selector(handleDocumentPan(sender:)))
 
     }
     
@@ -86,17 +86,20 @@ extension ViewController {
         
         case .ended:
             
-            if trashCan.frame.intersects(document.frame) {
+            if trashImage.frame.intersects(documentImage.frame) {
                 
-                disappearAnimation(document)
-                
-                returnView(document, to: documentOrigin!)
-                
-                appearAnimation(document)
+                disappearAnimation(documentImage) {
+                    
+                    self.returnView(self.documentImage, to: self.documentOrigin!, completion: {
+                        
+                        self.appearAnimation(self.documentImage, completion: nil)
+                        
+                    })
+                }
                 
             } else {
                 
-                returnView(document, to: documentOrigin!)
+                returnView(documentImage, to: documentOrigin!, completion: nil)
                 
             }
             
@@ -134,26 +137,33 @@ extension ViewController {
         
     }
     
-    private func disappearAnimation(_ view: UIView) {
+    private func disappearAnimation(_ view: UIView, completion: (() -> Void)?) {
         
-        UIView.animate(withDuration: 0.3) {
+        UIView.animate(withDuration: 0.3, animations: {
             view.alpha = 0
+        }) { (bool) in
+            completion?()
         }
-        
     }
 
-    private func appearAnimation(_ view: UIView) {
+    private func appearAnimation(_ view: UIView, completion: (() -> Void)?) {
         
-        UIView.animate(withDuration: 0.3) {
-            self.document.alpha = 1.0
+        UIView.animate(withDuration: 0.3, animations: {
+            view.alpha = 1.0
+        }) { (bool) in
+            completion?()
         }
         
     }
     
-    private func returnView(_ view: UIView, to origin: CGPoint) {
+    private func returnView(_ view: UIView, to origin: CGPoint, completion: (() -> Void)?) {
         
-        view.frame.origin = origin
-    
+        UIView.animate(withDuration: 0.3, animations: {
+            view.frame.origin = origin
+        }) { (bool) in
+            completion?()
+        }
+        
     }
 }
 
